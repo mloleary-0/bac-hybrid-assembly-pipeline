@@ -2,8 +2,8 @@
 This is a hybrid assembly snakemake pipeline using flye, medaka, and polypolish.  Intended for bacteria.  See dag.pdf for details.
 
 
-\
 
+\
 In short, this pipeline will:
 
 1) Run basic QC on your input reads, but will not process them (i.e., it will tell you if your reads are poor quality but will not do anything about it).
@@ -20,8 +20,11 @@ Caution: be sure to check your assembly graph with something like Bandage.  The 
 
 
 \
-Inputs:  This pipeline assumes that you have reads formatted in the following way
-Long reads: {strain}.fastq.gz 
-Short reads: {strain}.R1.fastq.gz {strain}.R2.fastq.gz
-These should be in the folders "long_reads" and "short_reads", respectively.  
+Inputs:  This pipeline assumes that you have reads formatted in the following way \
+\
+Long reads: {strain}.fastq.gz \
+\
+Short reads: {strain}.R1.fastq.gz {strain}.R2.fastq.gz  \
+  \
+These should be in the folders "long_reads" and "short_reads", respectively.  \
 Any number of sets of reads can be assembled at once, as long as they match this format.  In the future, I will update this pipeline so that the file extensions are modifiable in the config file.
