@@ -6,8 +6,8 @@ This is a hybrid assembly snakemake pipeline using flye, medaka, and polypolish.
 \
 In short, this pipeline will:
 
-1) Run basic QC on your input reads, but will not process them (i.e., it will tell you if your reads are poor quality but will not do anything about it).
-2) Run a flye 2.9 assembly
+1) Run basic QC on your input reads, but will not process them (i.e., it will tell you if your reads are poor quality but will not do anything about it).  This includes running the modified read_info_histograms.py found with Filtlong (https://github.com/rrwick/Filtlong).
+2) Run an assembly with [flye](https://github.com/fenderglass/Flye) 
 3) Polish with Medaka and Polypolish
 4) Attempt to rotate molecules with Circlator fixstart (it will not run other circlator programs)
 5) Do a final polish round with Polypolish (principally to make sure the contig ends were appropriately polished)
