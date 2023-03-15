@@ -84,6 +84,5 @@ These can of course be combined to produce a better assembly from newer data:
 snakemake -j N --config flyemethod=nano-hq guppymodel=r941_min_hac_g507
 ```
   \
-Both of these values could also changed by editing the respective values in config/pipeline_config.yaml.  
-
+Both of these values could also changed by editing the respective values in config/pipeline_config.yaml.
   \
