@@ -1,0 +1,5 @@
+flyemethod: "nano-raw"
+guppymodel: "r941_min_high_g330"
+#readfmt: ".fastq.gz"
+pilon-memory: "Xmx16g"
+env-name: "hybrid-pipeline-env"
