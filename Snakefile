@@ -66,7 +66,8 @@ rule all:
         expand("09-assembly_QC/long_read_mapping/{sample}/{sample}.unmapped.fastq.gz", sample = IDS),
         expand("09-assembly_QC/short_read_mapping/{sample}/{sample}.unmapped.fastq.gz", sample = IDS),
         expand("09-assembly_QC/short_read_mapping/{sample}/{sample}.idxstats.tab", sample = IDS),
-        expand("09-assembly_QC/short_read_mapping/{sample}/{sample}.coverage.tab", sample = IDS)
+        expand("09-assembly_QC/short_read_mapping/{sample}/{sample}.coverage.tab", sample = IDS),
+        expand("02-flye_assembly/{sample}/circ_summary.txt", sample = IDS)
         
 
 
@@ -136,7 +137,8 @@ rule flye_assembly:  # Note: change '--nano-raw' to '-nano-hq' if using guppy 5+
     input:
         fastq = "long_reads/{sample}.fastq.gz"
     output:
-        "02-flye_assembly/{sample}/assembly.fasta"
+        asm = "02-flye_assembly/{sample}/assembly.fasta",
+        info = "02-flye_assembly/{sample}/assembly_info.txt"
     threads: 
         workflow.cores
     log: 
@@ -147,11 +149,21 @@ rule flye_assembly:  # Note: change '--nano-raw' to '-nano-hq' if using guppy 5+
         method = expand("{param}", param = config["flyemethod"])
     shell:
         "flye --{params.method} {input.fastq} --out-dir 02-flye_assembly/{wildcards.sample} --threads {threads} 2> {log}" 
-# add --resume option for flye?
+
+rule get_flye_circ:
+    input: rules.flye_assembly.output.info
+    output: 
+        "02-flye_assembly/{sample}/circ_summary.txt"
+    log:
+        "logs/get_flye_circ.{sample}.log"
+    shell:
+        """ awk -F '\t' '$4 == "N" {{print $1}}' {input} 2> {log} 1> {output} """
+
+# This grabs contigs that flye didn't identify as circular and will use them as input for circlator's --ignore flag
 
 rule medaka:
     input: 
-        assembly = "02-flye_assembly/{sample}/assembly.fasta",
+        assembly = rules.flye_assembly.output.asm,
         fastq = "long_reads/{sample}.fastq.gz"
     output: "03-medaka_polish/{sample}/consensus.fasta"
     threads:
@@ -223,6 +235,15 @@ rule pre_rotate_polypolish:
     shell:
         "polypolish {input.draft} {input.SR1} {input.SR2} 2> {log} 1> {output}"
 
+rule clean_polypolish_names:
+    input:
+        rules.pre_rotate_polypolish.output
+    output: 
+        "04-polypolish/{sample}/consensus.clean.fasta"
+    log:
+        "logs/clean_polypolish_names.{sample}.log"
+    shell:
+        "sed 's/_polypolish//g' {input} 2> {log} 1> {output}"
 
 
 rule circlator:
@@ -230,7 +251,8 @@ rule circlator:
 #        "02-flye_assembly/{sample}/assembly.fasta"# placeholder until I get medaka running
 #        "03-medaka_polish/{sample}/consensus.fasta"
 #        "03-pilon_polish/{sample}/pilon_final_result/{sample}.pilon.polished.fasta"
-        rules.pre_rotate_polypolish.output
+        assembly = rules.clean_polypolish_names.output,
+        skips = rules.get_flye_circ.output
     output: 
         file = "05-rotated/{sample}.assembly.fasta"
     log: 
@@ -240,9 +262,9 @@ rule circlator:
     conda:
         "config/environment.yml"
     shell: 
-        "circlator fixstart {input} {params.prefix} 2> {log}"
-
-
+        "circlator fixstart --ignore $(realpath {input.skips}) {input.assembly} {params.prefix} 2> {log}"
+# add flag --ignore 'dummy' {params read from a file the flye_assembly.txt that don't have Y in col 4 / circ.}
+# see https://stackoverflow.com/questions/69714500/read-parameters-from-a-file-which-is-not-yet-created-with-snakemake
 
 rule post_rotate_bwa:
     input:
@@ -304,7 +326,7 @@ rule consolidate_genomes:
         "logs/consolidate_genomes.{sample}.log"
     run:
         shell("cp {input} {output} 2> {log}"),
-        shell("sed -i 's/_polypolish_polypolish//g' {output} 2>> {log}")
+        shell("sed -i 's/_polypolish//g' {output} 2>> {log}")
 
 rule checkM:
     input: 
