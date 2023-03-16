@@ -259,8 +259,8 @@ rule post_rotate_bwa:
         SR2 = "logs/post_rotate_bwa.{sample}.R2.log"
     run:
         shell("bwa index {input.draft}"),
-        shell("bwa mem -t {threads} -a {input.draft} {input.SR1} 2> {log} 1> {output.SR1align}"),
-        shell("bwa mem -t {threads} -a {input.draft} {input.SR2} 2> {log} 1> {output.SR2align}")
+        shell("bwa mem -t {threads} -a {input.draft} {input.SR1} 2> {log.SR1} 1> {output.SR1align}"),
+        shell("bwa mem -t {threads} -a {input.draft} {input.SR2} 2> {log.SR2} 1> {output.SR2align}")
 
         
 rule post_rotate_polypolish_filter:
