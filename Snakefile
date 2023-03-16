@@ -256,7 +256,7 @@ rule post_rotate_bwa:
         workflow.cores
     log: 
         SR1 = "logs/post_rotate_bwa.{sample}.R1.log",
-        SR2 = "logs/post_rotate_bwa.{sample}.R1.log"
+        SR2 = "logs/post_rotate_bwa.{sample}.R2.log"
     run:
         shell("bwa index {input.draft}"),
         shell("bwa mem -t {threads} -a {input.draft} {input.SR1} 2> {log} 1> {output.SR1align}"),
@@ -276,7 +276,6 @@ rule post_rotate_polypolish_filter:
         "logs/post_rotate_polypolish_filter.{sample}.log"
     conda:
         "config/environment.yml"
-    params:
     shell:
         "polypolish_insert_filter.py --in1 {input.SR1} --in2 {input.SR2} --out1 {output.SR1filt} --out2 {output.SR2filt} 2> {log}"
 
@@ -365,7 +364,8 @@ rule map_long_reads_to_assembly:
 
 rule samtools_stats_long_reads:
     input: 
-        samfile = "09-assembly_QC/long_read_mapping/{sample}/{sample}.aln.sam",
+        samfile = rules.map_long_reads_to_assembly.output.samfile
+#        "09-assembly_QC/long_read_mapping/{sample}/{sample}.aln.sam",
     output:
         bamfile = "09-assembly_QC/long_read_mapping/{sample}/{sample}.reads.sorted.bam",
         idxstats = "09-assembly_QC/long_read_mapping/{sample}/{sample}.idxstats.tab", 
@@ -386,7 +386,8 @@ rule samtools_stats_long_reads:
 
 rule samtools_get_unmapped_long_reads:
     input: 
-        bamfile = "09-assembly_QC/long_read_mapping/{sample}/{sample}.reads.sorted.bam"
+        bamfile = rules.samtools_stats_long_reads.output.bamfile
+#        "09-assembly_QC/long_read_mapping/{sample}/{sample}.reads.sorted.bam"
     output:
         bamfile = "09-assembly_QC/long_read_mapping/{sample}/{sample}.unmapped.bam",
         sorted_bamfile = "09-assembly_QC/long_read_mapping/{sample}/{sample}.unmapped.sorted.bam",
@@ -439,7 +440,8 @@ rule samtools_stats_short_reads:
 
 rule samtools_get_unmapped_short_reads:
     input: 
-        bamfile = "09-assembly_QC/short_read_mapping/{sample}/{sample}.reads.sorted.bam"
+        bamfile = rules.samtools_stats_short_reads.output.bamfile
+#        "09-assembly_QC/short_read_mapping/{sample}/{sample}.reads.sorted.bam"
     output:
         bamfile = "09-assembly_QC/short_read_mapping/{sample}/{sample}.unmapped.bam",
         sorted_bamfile = "09-assembly_QC/short_read_mapping/{sample}/{sample}.unmapped.sorted.bam",
@@ -452,34 +454,3 @@ rule samtools_get_unmapped_short_reads:
         shell("samtools view -h -f 4 {input.bamfile} 2> {log} 1> {output.bamfile}"),
         shell("samtools sort -n -o {output.sorted_bamfile} {output.bamfile} 2>> {log}"),
         shell("samtools fastq {output.bamfile} | gzip 2>> {log} 1> {output.fastq}")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# I can't add the ideel code here, because it requires a diamond database that would need to be independently set up, which may be too much of an ask.  Also can only have one snakemake pipeline active at once.
-
-
-
-
-
-
-
-# IDS, = glob_wildcards("input_reads/{sample}.fastq*")
