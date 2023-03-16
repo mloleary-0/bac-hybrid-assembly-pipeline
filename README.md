@@ -51,7 +51,7 @@ Then, activate the environment:
 conda activate asm-polypolish-env
 ```
 
-Finally, move your sequencing reads (.fastq.gz) to a folder in this directory called 'input_reads', and launch the pipeline with N cores:
+Finally, create two folders in this directory called 'long_reads' and 'short_reads'. Move your nanopore sequencing reads (.fastq.gz format) into 'long_reads' and paired-end illumina reads into 'short_reads'.  Then, launch the pipeline with N cores:
 
 ```
 snakemake -j N
