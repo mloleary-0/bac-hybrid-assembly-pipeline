@@ -66,8 +66,7 @@ rule all:
         expand("09-assembly_QC/long_read_mapping/{sample}/{sample}.unmapped.fastq.gz", sample = IDS),
         expand("09-assembly_QC/short_read_mapping/{sample}/{sample}.unmapped.fastq.gz", sample = IDS),
         expand("09-assembly_QC/short_read_mapping/{sample}/{sample}.idxstats.tab", sample = IDS),
-        expand("09-assembly_QC/short_read_mapping/{sample}/{sample}.coverage.tab", sample = IDS),
-        expand("02-flye_assembly/{sample}/circ_summary.txt", sample = IDS)
+        expand("09-assembly_QC/short_read_mapping/{sample}/{sample}.coverage.tab", sample = IDS)
         
 
 
