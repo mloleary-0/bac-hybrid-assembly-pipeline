@@ -29,6 +29,15 @@ Short reads: {strain}.R1.fastq.gz {strain}.R2.fastq.gz  \
 These should be in the folders "long_reads" and "short_reads", respectively.  \
 Any number of sets of reads can be assembled at once, as long as they match this format.  In the future, I will update this pipeline so that the file extensions are modifiable in the config file.
 
+\
+**Setup**
+\
+Pull the pipeline down and set the bin scripts to executable.
+```
+git clone https://github.com/mloleary-0/bac-hybrid-assembly-pipeline.git
+chmod +x bac-hybrid-assembly-pipeline/bin/read_info_histograms.sh
+chmod +x bac-hybrid-assembly-pipeline/bin/histogram.py
+```
 
 
   \
