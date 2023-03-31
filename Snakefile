@@ -58,6 +58,7 @@ rule all:
     input:
         "01-QC_inputs/fastqc/multiqc_report.html", # multiqc
         expand("01-QC_inputs/read_info_histograms/{sample}.txt", sample = IDS),
+        expand("01-QC_inputs/fastqc/{sample}_fastqc.html", sample = IDS),
         "07-checkM/checkM.results.tab",
         expand("08-prokka_annotation/{sample}.polished/{sample}.gbk", sample = IDS),
         expand("09-assembly_QC/long_read_mapping/{sample}/{sample}.coverage.tab", sample = IDS),
@@ -90,9 +91,11 @@ rule QC_long_reads:
 
 rule QC_short_reads:
     input:
-        fastq = "short_reads/{sample}.fastq.gz",
+        R1 = "short_reads/{sample}.R1.fastq.gz",
+        R2 = "short_reads/{sample}.R2.fastq.gz"
     output:
-        "01-QC_inputs/fastqc/{sample}_fastqc.html",
+        "01-QC_inputs/fastqc/{sample}.R1_fastqc.html",
+        "01-QC_inputs/fastqc/{sample}.R2_fastqc.html"
 #        directory("01-QC_inputs/fastqc/")
     log: 
         "logs/QC_short_reads.{sample}.log"
@@ -101,11 +104,13 @@ rule QC_short_reads:
     conda:
         "config/environment.yml"
     shell:
-        "fastqc --threads {threads} --outdir 01-QC_inputs/fastqc {input.fastq} 2> {log}"
+        "fastqc --threads {threads} --outdir 01-QC_inputs/fastqc {input.R1} {input.R2} 2> {log}"
 
 
 rule QC_multiqc:
-    input: expand(["01-QC_inputs/fastqc/{sample}_fastqc.html"], sample = IDS)
+    input: expand(["01-QC_inputs/fastqc/{sample}_fastqc.html"], sample = IDS),
+        expand(["01-QC_inputs/fastqc/{sample}.R1_fastqc.html"], sample = IDS),
+        expand(["01-QC_inputs/fastqc/{sample}.R2_fastqc.html"], sample = IDS)
     output: "01-QC_inputs/fastqc/multiqc_report.html"
     log: 
         expand("logs/QC_multiqc.{sample}.log", sample = IDS)
