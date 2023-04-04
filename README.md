@@ -38,7 +38,8 @@ git clone https://github.com/mloleary-0/bac-hybrid-assembly-pipeline.git
 chmod +x bac-hybrid-assembly-pipeline/bin/read_info_histograms.sh
 chmod +x bac-hybrid-assembly-pipeline/bin/histogram.py
 ```
-
+\
+As usual, I also make use of shell functions ```basename``` and ```realpath```, which may not be installed by default on your machine.  Install with ```apt-get``` as appropriate.
 
   \
 **Running the pipeline**
