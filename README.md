@@ -50,7 +50,11 @@ This pipeline requires a manually installed conda environment named asm-pipeline
 ```
 conda env create -f config/environment.yml
 ```
-or
+or install mamba into your conda env
+```
+conda install -c conda-forge mamba
+```
+and install via mamba (this is faster)
 ``` 
 mamba env create -f config/environment.yml
 ```
