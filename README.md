@@ -46,16 +46,14 @@ As usual, I also make use of shell functions ```basename``` and ```realpath```, 
   \
 This pipeline requires a manually installed conda environment named asm-pipeline-env, described by environment.yml - it will not install the environment for you.  Install this environment with either conda/mamba (mamba is significantly faster) by running:
 
-
+ 
 ```
+cd bac-hybrid-assembly-pipeline
 conda env create -f config/environment.yml
 ```
-or install mamba into your conda env
+or
 ```
-conda install -c conda-forge mamba
-```
-and install via mamba (this is faster)
-``` 
+cd bac-hybrid-assembly-pipeline
 mamba env create -f config/environment.yml
 ```
 
