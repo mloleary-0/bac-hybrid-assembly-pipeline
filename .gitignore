@@ -1,0 +1,9 @@
+sequence.fasta.gz
+sequence.fasta
+input/
+logs/
+0*-*/
+long_reads/
+short_reads/
+test_read_source/
+.snakemake/

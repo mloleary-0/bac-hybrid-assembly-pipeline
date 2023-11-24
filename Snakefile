@@ -85,7 +85,7 @@ rule QC_long_reads:
     log: 
         "logs/QC_long_reads.{sample}.log"
     conda:
-        "config/environment.yml"
+        "asm-fastqc"
     shell:
         "fastqc --threads {threads} --nano --outdir 01-QC_inputs/fastqc {input.fastq} 2> {log}"
 
@@ -102,7 +102,7 @@ rule QC_short_reads:
     threads: 
         workflow.cores
     conda:
-        "config/environment.yml"
+        "asm-fastqc"
     shell:
         "fastqc --threads {threads} --outdir 01-QC_inputs/fastqc {input.R1} {input.R2} 2> {log}"
 
@@ -115,7 +115,7 @@ rule QC_multiqc:
     log: 
         expand("logs/QC_multiqc.{sample}.log", sample = IDS)
     conda:
-        "config/environment.yml"
+        "asm-fastqc"
     params:
         multiqc_err_log = "logs/multiqc.log"
     shell: "multiqc -o 01-QC_inputs/fastqc 01-QC_inputs/fastqc 2> {params.multiqc_err_log}"
@@ -130,7 +130,7 @@ rule read_info_hists:
     log: 
         "logs/read_info_hists.{sample}.log"
     conda:
-        "config/environment.yml"
+        "asm-filtlong"
     shell:
         "bin/read_info_histograms.sh {input.fastq} 2> {log} 1> {output.file}" 
 
@@ -148,7 +148,7 @@ rule flye_assembly:  # Note: change '--nano-raw' to '-nano-hq' if using guppy 5+
     log: 
         "logs/flye_assembly.{sample}.log"
     conda:
-        "config/environment.yml"
+        "asm-flye"
     params:
         method = expand("{param}", param = config["flyemethod"])
     shell:
@@ -175,7 +175,7 @@ rule medaka:
     log: 
         "logs/medaka.{sample}.log"
     conda:
-        "config/environment.yml"
+        "asm-medaka"
     params:
         model = config["guppymodel"],
         outdir = "03-medaka_polish/{sample}"
@@ -200,10 +200,14 @@ rule pre_rotate_bwa:
     log: 
         SR1 = "logs/pre_rotate_bwa.{sample}.R1.log",
         SR2 = "logs/pre_rotate_bwa.{sample}.R2.log"
-    run:
-        shell("bwa index {input.draft}"),
-        shell("bwa mem -t {threads} -a {input.draft} {input.SR1} 2> {log.SR1} 1> {output.SR1align}"),
-        shell("bwa mem -t {threads} -a {input.draft} {input.SR2} 2> {log.SR2} 1> {output.SR2align}")
+    conda:
+        "asm-bwa" 
+    shell:
+        """
+        bwa index {input.draft}
+        bwa mem -t {threads} -a {input.draft} {input.SR1} 2> {log.SR1} 1> {output.SR1align}
+        bwa mem -t {threads} -a {input.draft} {input.SR2} 2> {log.SR2} 1> {output.SR2align}
+        """
 
         
 rule pre_rotate_polypolish_filter:
@@ -218,8 +222,7 @@ rule pre_rotate_polypolish_filter:
     log: 
         "logs/pre_rotate_polypolish_filter.{sample}.log"
     conda:
-        "config/environment.yml"
-    params:
+        "asm-polypolish"
     shell:
         "polypolish_insert_filter.py --in1 {input.SR1} --in2 {input.SR2} --out1 {output.SR1filt} --out2 {output.SR2filt} 2> {log}"
 
@@ -234,7 +237,7 @@ rule pre_rotate_polypolish:
     log: 
         "logs/pre_rotate_polypolish.{sample}.log"
     conda:
-        "config/environment.yml"
+        "asm-polypolish"
     params:
     shell:
         "polypolish {input.draft} {input.SR1} {input.SR2} 2> {log} 1> {output}"
@@ -264,7 +267,7 @@ rule circlator:
     params:
         prefix = "05-rotated/{sample}.assembly"
     conda:
-        "config/environment.yml"
+        "asm-circlator"
     shell: 
         "circlator fixstart --ignore $(realpath {input.skips}) {input.assembly} {params.prefix} 2> {log}"
 # add flag --ignore 'dummy' {params read from a file the flye_assembly.txt that don't have Y in col 4 / circ.}
@@ -283,10 +286,14 @@ rule post_rotate_bwa:
     log: 
         SR1 = "logs/post_rotate_bwa.{sample}.R1.log",
         SR2 = "logs/post_rotate_bwa.{sample}.R2.log"
-    run:
-        shell("bwa index {input.draft}"),
-        shell("bwa mem -t {threads} -a {input.draft} {input.SR1} 2> {log.SR1} 1> {output.SR1align}"),
-        shell("bwa mem -t {threads} -a {input.draft} {input.SR2} 2> {log.SR2} 1> {output.SR2align}")
+    conda:
+        "asm-bwa"
+    shell:
+        """
+        bwa index {input.draft}
+        bwa mem -t {threads} -a {input.draft} {input.SR1} 2> {log.SR1} 1> {output.SR1align}
+        bwa mem -t {threads} -a {input.draft} {input.SR2} 2> {log.SR2} 1> {output.SR2align}
+        """
 
         
 rule post_rotate_polypolish_filter:
@@ -301,7 +308,7 @@ rule post_rotate_polypolish_filter:
     log: 
         "logs/post_rotate_polypolish_filter.{sample}.log"
     conda:
-        "config/environment.yml"
+        "asm-polypolish"
     shell:
         "polypolish_insert_filter.py --in1 {input.SR1} --in2 {input.SR2} --out1 {output.SR1filt} --out2 {output.SR2filt} 2> {log}"
 
@@ -316,7 +323,7 @@ rule post_rotate_polypolish:
     log: 
         "logs/post_rotate_polypolish.{sample}.log"
     conda:
-        "config/environment.yml"
+        "asm-polypolish"
     params:
         consolidated_dir = "06-rotated_polypolish/consolidated"
     shell:
@@ -343,7 +350,7 @@ rule checkM:
     log:
         expand("logs/checkM.{sample}.log", sample = IDS)
     conda:
-        "config/environment.yml"
+        "asm-checkm"
     params:
         genomes = "07-checkM/genomes",
         checkm_output = "07-checkM",
@@ -365,27 +372,46 @@ rule prokka:
     log: 
         "logs/prokka.{sample}.log"
     conda:
-        "config/environment.yml"
+        "asm-prokka"
     shell:
         "prokka --outdir {params.polished_outdir} --force --cpus {threads} --locustag {wildcards.sample} --prefix {wildcards.sample} {input.polished} 2> {log}"
 
 
 # add rule for mapping reads against the assembly for QC:
 
+rule index_assembly:
+    input:
+        assembly = rules.consolidate_genomes.output
+    output:
+        amb = "{sample}.assembly.consensus.fasta.amb",
+        ann = "{sample}.assembly.consensus.fasta.ann",
+        bwt = "{sample}.assembly.consensus.fasta.bwt",
+        pac = "{sample}.assembly.consensus.fasta.pac",
+        sa = "{sample}.assembly.consensus.fasta.sa"
+    threads:
+        workflow.cores
+    log:
+        "logs/index_assembly.{sample}.log"
+    conda:
+        "asm-bwa"
+    shell:
+        "bwa index {input.assembly} 2> {log}"
     
 rule map_long_reads_to_assembly:
     input:
         assembly = rules.consolidate_genomes.output,
-        reads = "long_reads/{sample}.fastq.gz"
+        reads = "long_reads/{sample}.fastq.gz",
+        index = rules.index_assembly.output.amb
     output:
         samfile = "09-assembly_QC/long_read_mapping/{sample}/{sample}.aln.sam"
     threads:
         workflow.cores
     log: 
         "logs/map_long_reads_to_assembly.{sample}.log"
-    run:
-        shell("bwa index {input.assembly} 2> {log}"),
-        shell("minimap2 -ax map-ont -t {threads} {input.assembly} {input.reads} 2>> {log} 1> {output.samfile}"),
+    conda: 
+        "asm-minimap2"
+    shell:
+        "minimap2 -ax map-ont -t {threads} {input.assembly} {input.reads} 2>> {log} 1> {output.samfile}"
 
 
 rule samtools_stats_long_reads:
@@ -401,11 +427,15 @@ rule samtools_stats_long_reads:
         workflow.cores
     log: 
         "logs/samtools_stats_long_reads.{sample}.log"
-    run:
-        shell("samtools sort -@ {threads} -o {output.bamfile} -T reads.tmp {input.samfile} 2> {log}"),
-        shell("samtools index -@ {threads} {output.bamfile} 2>> {log}"),
-        shell("samtools idxstats {output.bamfile} 2>> {log} 1> {output.idxstats}"),
-        shell("samtools coverage {output.bamfile} 2>> {log} 1> {output.coverage}")
+    conda: 
+        "asm-samtools"
+    shell:
+       """
+        samtools sort -@ {threads} -o {output.bamfile} -T reads.tmp {input.samfile} 2> {log}
+        samtools index -@ {threads} {output.bamfile} 2>> {log}
+        samtools idxstats {output.bamfile} 2>> {log} 1> {output.idxstats}
+        samtools coverage {output.bamfile} 2>> {log} 1> {output.coverage}
+        """
 
 # idxstats prints: contig contig_length #mapped #unmapped
 
@@ -422,11 +452,14 @@ rule samtools_get_unmapped_long_reads:
         workflow.cores
     log: 
         "logs/samtools_get_unmapped_long_reads.{sample}.log"
-    run:
-        shell("samtools view -h -f 4 {input.bamfile} 2> {log} 1> {output.bamfile}"),
-        shell("samtools sort -n -o {output.sorted_bamfile} {output.bamfile} 2>> {log}"),
-        shell("samtools fastq {output.bamfile} | gzip 2>> {log} 1> {output.fastq}")
-
+    conda: 
+        "asm-samtools"
+    shell:
+        """
+        samtools view -h -f 4 {input.bamfile} 2> {log} 1> {output.bamfile}
+        samtools sort -n -o {output.sorted_bamfile} {output.bamfile} 2>> {log}
+        samtools fastq {output.bamfile} | gzip 2>> {log} 1> {output.fastq}
+        """
 
 rule map_short_reads_to_assembly:
     input:
@@ -439,9 +472,13 @@ rule map_short_reads_to_assembly:
         workflow.cores
     log: 
         "logs/map_short_reads_to_assembly.{sample}.log"
-    run:
-        shell("bwa index {input.assembly} 2> {log}"),
-        shell("bwa mem -t {threads} -a {input.assembly} {input.SR1} 2>> {log} 1> {output.samfile}")
+    conda:
+        "asm-bwa"
+    shell:
+        """
+        bwa index {input.assembly} 2> {log}
+        bwa mem -t {threads} -a {input.assembly} {input.SR1} 2>> {log} 1> {output.samfile}
+        """
 
 rule samtools_stats_short_reads:
     input: 
@@ -455,11 +492,15 @@ rule samtools_stats_short_reads:
         workflow.cores
     log: 
         "logs/samtools_stats_short_reads.{sample}.log"
-    run:
-        shell("samtools sort -@ {threads} -o {output.bamfile} -T reads.tmp {input.samfile} 2> {log}"),
-        shell("samtools index -@ {threads} {output.bamfile} 2>> {log}"),
-        shell("samtools idxstats {output.bamfile} 2>> {log} 1> {output.idxstats}"),
-        shell("samtools coverage {output.bamfile} 2>> {log} 1> {output.coverage}")
+    conda: 
+        "asm-samtools"
+    shell:
+        """
+        samtools sort -@ {threads} -o {output.bamfile} -T reads.tmp {input.samfile} 2> {log}
+        samtools index -@ {threads} {output.bamfile} 2>> {log}
+        samtools idxstats {output.bamfile} 2>> {log} 1> {output.idxstats}
+        samtools coverage {output.bamfile} 2>> {log} 1> {output.coverage}
+        """
 
 # idxstats prints: contig contig_length #mapped #unmapped
 
@@ -476,7 +517,11 @@ rule samtools_get_unmapped_short_reads:
         workflow.cores
     log: 
         "logs/samtools_get_unmapped_short_reads.{sample}.log"
-    run:
-        shell("samtools view -h -f 4 {input.bamfile} 2> {log} 1> {output.bamfile}"),
-        shell("samtools sort -n -o {output.sorted_bamfile} {output.bamfile} 2>> {log}"),
-        shell("samtools fastq {output.bamfile} | gzip 2>> {log} 1> {output.fastq}")
+    conda: 
+        "asm-samtools"
+    shell:
+        """
+        samtools view -h -f 4 {input.bamfile} 2> {log} 1> {output.bamfile}
+        samtools sort -n -o {output.sorted_bamfile} {output.bamfile} 2>> {log}
+        samtools fastq {output.bamfile} | gzip 2>> {log} 1> {output.fastq}
+        """
