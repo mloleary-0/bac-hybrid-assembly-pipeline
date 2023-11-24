@@ -2,7 +2,7 @@ shell.executable("/bin/bash")
 
 # on our server, the best way to run this will to navigate to the directory with 'Snakefile', and run:
 # activate conda asm-pipeline-env
-# 'snakemake -j 14'
+# 'snakemake -j 14 --use-conda'
 #
 # where -j 14 specificies that many cores to use at once as a maximum for the pipeline.  Our server is 16 cores, so this is a reasonable number.  Most steps that benefit from multithreading are set to use the provided number of cores, and won't automatically grab available cores.
 
